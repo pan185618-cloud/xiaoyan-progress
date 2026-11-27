@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小研科研进度大盘 · Macro Research Dashboard</title>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("xy_theme");
+        if (saved === "dark" || saved === "light") {
+          document.documentElement.setAttribute("data-theme", saved);
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body class="page-dashboard">
+  <!-- Sticky Header -->
+  <header class="dash-header">
+    <div class="dash-brand">
+      <div class="dash-logo" aria-hidden="true">研</div>
+      <div>
+        <div class="dash-title">小研科研进度大盘</div>
+        <div class="dash-subtitle" id="dash-updated-at">正在加载宏观快照…</div>
+      </div>
+    </div>
+
+    <div class="dash-header-actions">
+      <span id="sse-pill" class="badge neutral" title="实时事件流状态">
+        <span class="status-dot muted"></span>
+        <span>SSE 连接中</span>
+      </span>
+      <span id="hmac-pill" class="badge neutral" title="HMAC-SHA256 本地收据验真状态">
+        验真检测中
+      </span>
+      <a class="btn btn-sm" href="/hud?mode=expanded" target="_blank" rel="noopener" title="在浏览器新标签页预览右上角微进度 HUD">
+        ◱ HUD 预览
+      </a>
+      <button id="btn-theme" class="btn btn-sm" type="button" title="切换浅色 / 深色主题">
+        ◐ 主题
+      </button>
+      <button id="btn-refresh" class="btn btn-sm btn-primary" type="button" title="强制重新扫描项目目录">
+        ↻ 刷新
+      </button>
+    </div>
+  </header>
+
+  <main class="dash-main">
+    <!-- Top KPI Strip -->
+    <section class="kpi-strip" id="kpi-strip" aria-label="核心指标总览">
+      <div class="kpi-card clickable" data-kpi="approvals">
+        <div class="kpi-label"><span>待人工审批</span><span>TTY</span></div>
+        <div class="kpi-value" id="kpi-approvals">—</div>
+        <div class="kpi-sub" id="kpi-approvals-sub">等待加载</div>
+      </div>
+      <div class="kpi-card clickable" data-kpi="gates">
+        <div class="kpi-label"><span>门禁阻断</span><span>QC</span></div>
+        <div class="kpi-value" id="kpi-gates">—</div>
+        <div class="kpi-sub" id="kpi-gates-sub">出图 / 写作 / 审计</div>
+      </div>
+      <div class="kpi-card clickable" data-kpi="drift">
+        <div class="kpi-label"><span>跳阶与漂移</span><span>风控</span></div>
+        <div class="kpi-value" id="kpi-drift">—</div>
+        <div class="kpi-sub" id="kpi-drift-sub">跳阶告警 / 状态漂移</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><span>HMAC 验真</span><span>证据链</span></div>
+        <div class="kpi-value" id="kpi-hmac">—</div>
+        <div class="kpi-sub" id="kpi-hmac-sub">只读本地收据校验</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><span>活跃会话</span><span>实时</span></div>
+        <div class="kpi-value" id="kpi-sessions">—</div>
+        <div class="kpi-sub" id="kpi-sessions-sub">Codex / ChatGPT Work</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><span>课题总览</span><span>矩阵</span></div>
+        <div class="kpi-value" id="kpi-projects">—</div>
+        <div class="kpi-sub" id="kpi-projects-sub">当前筛选 / 总计</div>
+      </div>
+    </section>
+
+    <!-- Collapsible Pending Human Action Queue -->
+    <section class="queue-panel" id="queue-panel" aria-label="待人工处理队列">
+      <div class="queue-header" id="queue-toggle" role="button" tabindex="0" aria-expanded="true">
+        <div class="queue-header-left">
+          <span id="queue-chevron">▾</span>
+          <span>待人工处理队列（审批签署 / C 级决策 / 门禁阻断）</span>
+          <span class="badge neutral" id="queue-count-badge">0</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-3);">
+          Web 端只读：一键复制终端命令，或通过原生 HUD 菜单栏弹终端签署
+        </div>
+      </div>
+      <div class="queue-body" id="queue-body">
+        <div style="color: var(--text-3); font-size: 12px;">正在汇总待处理项…</div>
+      </div>
+    </section>
+
+    <!-- Filter & Search Toolbar -->
+    <section class="filter-bar" aria-label="课题筛选栏">
+      <div class="filter-group">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input id="search-input" type="text" placeholder="搜索课题名、路径、合同 ID… (/)" autocomplete="off" />
+          <button id="search-clear" class="search-clear" type="button" aria-label="清除搜索">×</button>
+        </div>
+
+        <div class="segmented" id="category-tabs" role="tablist" aria-label="课题分类">
+          <button class="seg-btn active" data-cat="active" type="button">活跃课题</button>
+          <button class="seg-btn" data-cat="all" type="button">全部</button>
+          <button class="seg-btn" data-cat="v3" type="button">仅 V3</button>
+          <button class="seg-btn" data-cat="v2" type="button">仅 V2</button>
+          <button class="seg-btn" data-cat="custom" type="button">非标准</button>
+        </div>
+
+        <label class="toggle-label">
+          <input id="toggle-system" type="checkbox" />
+          <span>显示系统目录</span>
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <div class="segmented" id="view-tabs" role="tablist" aria-label="视图切换">
+          <button class="seg-btn active" data-view="flowchart" type="button" title="带箭头流程图与分色板块视图">➔ 流程图视图</button>
+          <button class="seg-btn" data-view="matrix" type="button" title="紧凑 8 阶段矩阵总览表">⊞ 矩阵视图</button>
+        </div>
+
+        <button class="chip-btn" id="chip-approvals" type="button">⏸ 仅待审批</button>
+        <button class="chip-btn" id="chip-risk" type="button">⚠ 仅阻断/跳阶</button>
+        <button class="chip-btn" id="chip-pinned" type="button">★ 仅置顶</button>
+
+        <select id="sort-select" class="sort-select" aria-label="排序方式">
+          <option value="default">排序：置顶 + 最近活跃</option>
+          <option value="risk">排序：风险与审批优先</option>
+          <option value="name">排序：课题名称 A-Z</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Default View: Arrow Flowchart Cards View -->
+    <section class="flow-container" id="flowchart-view" aria-label="课题流程图视图">
+      <div class="flow-meta-bar">
+        <div id="flow-count-info">正在扫描科研课题流程…</div>
+        <div class="flow-legend">
+          <span class="flow-legend-item"><span class="flow-swatch done"></span> ✓ 已完成</span>
+          <span class="flow-legend-item"><span class="flow-swatch active"></span> ⟳ 进行中</span>
+          <span class="flow-legend-item"><span class="flow-swatch warn"></span> ⏸ 待审批</span>
+          <span class="flow-legend-item"><span class="flow-swatch blocked"></span> ✕ 阻断/跳阶</span>
+          <span class="flow-legend-item"><span class="flow-swatch todo"></span> ○ 未完成</span>
+          <span class="flow-legend-item"><span class="flow-swatch explore"></span> ✦ 探索轨</span>
+        </div>
+      </div>
+      <div class="flow-list" id="flowchart-list">
+        <div class="matrix-card empty-table-state">正在加载科研课题流程图…</div>
+      </div>
+    </section>
+
+    <!-- Secondary View: Macro Matrix Table -->
+    <section class="matrix-card hidden" id="matrix-view" aria-label="课题阶段进度矩阵">
+      <div class="matrix-meta-bar">
+        <div id="matrix-count-info">加载中…</div>
+        <div class="matrix-legend">
+          <span><span class="proof-dot verified"></span> HMAC已验真</span>
+          <span><span class="proof-dot observed"></span> 文件观测</span>
+          <span><span class="proof-dot unverified"></span> 未验真</span>
+          <span><span class="proof-dot invalid"></span> 校验失败</span>
+          <span><span class="live-dot" style="width:7px;height:7px;"></span> 活跃会话</span>
+        </div>
+      </div>
+
+      <div class="matrix-scroll">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th class="col-project">课题 / 主线合同</th>
+              <th title="S0: 选题与构思">S0 构思</th>
+              <th title="S1: 数据与变量就绪">S1 数据</th>
+              <th title="S2: 研究合同冻结">S2 合同</th>
+              <th title="S3: 正式 R 证据链">S3 证据</th>
+              <th title="S4: 图表与质检">S4 图表</th>
+              <th title="S5: 手稿撰写与去AI">S5 手稿</th>
+              <th title="S6: 七层审计与复核">S6 审计</th>
+              <th title="S7: 投稿包与发布门">S7 投稿</th>
+              <th title="独立探索轨（candidate_not_released）">探索轨</th>
+            </tr>
+          </thead>
+          <tbody id="matrix-tbody">
+            <tr>
+              <td colspan="10" class="empty-table-state">正在扫描科研课题矩阵…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Slide-Over Detail Drawer -->
+  <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
+  <aside id="detail-drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <div class="drawer-header">
+      <div style="min-width: 0; flex: 1;">
+        <div class="drawer-title" id="drawer-title">课题详情</div>
+        <div class="drawer-sub" id="drawer-sub"></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+        <button id="drawer-pin-btn" class="btn btn-sm" type="button" title="置顶或取消置顶">★ 置顶</button>
+        <button id="drawer-close-btn" class="btn btn-sm btn-ghost" type="button" aria-label="关闭抽屉">✕</button>
+      </div>
+    </div>
+
+    <nav class="drawer-nav" id="drawer-nav" aria-label="详情分节导航">
+      <button class="drawer-nav-btn active" data-target="sec-stages" type="button">阶段时间线</button>
+      <button class="drawer-nav-btn" data-target="sec-contracts" type="button">多合同管理</button>
+      <button class="drawer-nav-btn" data-target="sec-evidence" type="button">证据链与门禁</button>
+      <button class="drawer-nav-btn" data-target="sec-approvals" type="button">审批与决策</button>
+    </nav>
+
+    <div class="drawer-body" id="drawer-body">
+      <div class="empty-table-state">请选择左侧矩阵中的课题查看详情</div>
+    </div>
+  </aside>
+
+  <script type="module" src="/static/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="page-hud">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小研实时进度 HUD</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body class="page-hud">
+  <div id="hud-root" class="hud-root" aria-live="polite">
+    <!-- Rendered dynamically by hud.js (Collapsed 290x42 pill OR Expanded 376x540 card) -->
+  </div>
+
+  <div id="hud-preview-note" class="hud-preview-note hidden">
+    <span>浏览器预览模式</span>
+    <button id="preview-toggle-mode" class="btn btn-xs" type="button">切换折叠/展开</button>
+    <a href="/" target="_blank" rel="noopener">打开宏观大盘 ↗</a>
+  </div>
+
+  <script type="module" src="/static/hud.js"></script>
+</body>
+</html>

@@ -1,0 +1,2330 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>小研实时进度</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-subtle: #f7f8fa;
+    --surface: #ffffff;
+    --surface-2: #f1f4f8;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #111827;
+    --text-2: #374151;
+    --muted: #6b7280;
+
+    --done-bg: #ecfdf5;
+    --done-bg-strong: #d1fae5;
+    --done-border: #34d399;
+    --done-text: #065f46;
+    --done-accent: #16a34a;
+
+    --active-bg: #eff6ff;
+    --active-bg-strong: #dbeafe;
+    --active-border: #60a5fa;
+    --active-text: #1e40af;
+    --active-accent: #2563eb;
+
+    --warn-bg: #fffbeb;
+    --warn-bg-strong: #fef3c7;
+    --warn-border: #f59e0b;
+    --warn-text: #92400e;
+    --warn-accent: #d97706;
+
+    --err-bg: #fef2f2;
+    --err-bg-strong: #fee2e2;
+    --err-border: #f87171;
+    --err-text: #991b1b;
+    --err-accent: #dc2626;
+
+    --todo-bg: #f9fafb;
+    --todo-border: #d1d5db;
+    --todo-text: #4b5563;
+    --todo-muted: #9ca3af;
+
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-tray: 0 -6px 20px rgba(15, 23, 42, 0.09);
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111317;
+      --bg-subtle: #161920;
+      --surface: #1b1f27;
+      --surface-2: #222733;
+      --border: #2a303d;
+      --border-strong: #3a4254;
+      --text: #f3f4f6;
+      --text-2: #d1d5db;
+      --muted: #9ca3af;
+
+      --done-bg: rgba(22, 163, 74, 0.13);
+      --done-bg-strong: rgba(22, 163, 74, 0.24);
+      --done-border: rgba(52, 211, 153, 0.5);
+      --done-text: #86efac;
+      --done-accent: #22c55e;
+
+      --active-bg: rgba(37, 99, 235, 0.16);
+      --active-bg-strong: rgba(37, 99, 235, 0.28);
+      --active-border: rgba(96, 165, 250, 0.58);
+      --active-text: #93c5fd;
+      --active-accent: #3b82f6;
+
+      --warn-bg: rgba(217, 119, 6, 0.15);
+      --warn-bg-strong: rgba(217, 119, 6, 0.28);
+      --warn-border: rgba(251, 191, 36, 0.55);
+      --warn-text: #fcd34d;
+      --warn-accent: #f59e0b;
+
+      --err-bg: rgba(220, 38, 38, 0.16);
+      --err-bg-strong: rgba(220, 38, 38, 0.28);
+      --err-border: rgba(248, 113, 113, 0.58);
+      --err-text: #fca5a5;
+      --err-accent: #ef4444;
+
+      --todo-bg: rgba(148, 163, 184, 0.06);
+      --todo-border: #333b4a;
+      --todo-text: #cbd5e1;
+      --todo-muted: #6b7280;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+      --shadow-tray: 0 -8px 24px rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #111317;
+    --bg-subtle: #161920;
+    --surface: #1b1f27;
+    --surface-2: #222733;
+    --border: #2a303d;
+    --border-strong: #3a4254;
+    --text: #f3f4f6;
+    --text-2: #d1d5db;
+    --muted: #9ca3af;
+
+    --done-bg: rgba(22, 163, 74, 0.13);
+    --done-bg-strong: rgba(22, 163, 74, 0.24);
+    --done-border: rgba(52, 211, 153, 0.5);
+    --done-text: #86efac;
+    --done-accent: #22c55e;
+
+    --active-bg: rgba(37, 99, 235, 0.16);
+    --active-bg-strong: rgba(37, 99, 235, 0.28);
+    --active-border: rgba(96, 165, 250, 0.58);
+    --active-text: #93c5fd;
+    --active-accent: #3b82f6;
+
+    --warn-bg: rgba(217, 119, 6, 0.15);
+    --warn-bg-strong: rgba(217, 119, 6, 0.28);
+    --warn-border: rgba(251, 191, 36, 0.55);
+    --warn-text: #fcd34d;
+    --warn-accent: #f59e0b;
+
+    --err-bg: rgba(220, 38, 38, 0.16);
+    --err-bg-strong: rgba(220, 38, 38, 0.28);
+    --err-border: rgba(248, 113, 113, 0.58);
+    --err-text: #fca5a5;
+    --err-accent: #ef4444;
+
+    --todo-bg: rgba(148, 163, 184, 0.06);
+    --todo-border: #333b4a;
+    --todo-text: #cbd5e1;
+    --todo-muted: #6b7280;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+    --shadow-tray: 0 -8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 12.5px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    height: 100vh;
+    height: 100dvh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Animations */
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .spinner {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1.8px solid var(--active-border);
+    border-top-color: var(--active-accent);
+    display: inline-block;
+    flex-shrink: 0;
+    animation: spin 0.9s linear infinite;
+  }
+  .spinner-xs {
+    width: 10px;
+    height: 10px;
+    border-width: 1.5px;
+  }
+
+  .mono { font-family: var(--mono); }
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Custom slim scrollbars */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 999px;
+  }
+
+  /* 1. Top Compact Control Bar */
+  .topbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sess-select {
+    flex: 1;
+    min-width: 0;
+    height: 28px;
+    padding: 0 22px 0 8px;
+    border-radius: 7px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-subtle);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    text-overflow: ellipsis;
+  }
+  .sess-select:focus {
+    border-color: var(--active-accent);
+  }
+
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--warn-accent);
+    transition: background 0.2s;
+  }
+  .sync-dot.ok { background: var(--done-accent); }
+  .sync-dot.err { background: var(--err-accent); }
+  .sync-dot.busy {
+    background: var(--active-accent);
+    animation: pulse 1.1s ease-in-out infinite;
+  }
+
+  .icon-btn {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .icon-btn:hover {
+    background: var(--surface-2);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .icon-btn.sm {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  /* 2. Project Binding & Context Strip */
+  .header-strip {
+    flex-shrink: 0;
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .header-strip.hidden { display: none; }
+
+  .bind-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+  }
+  .bind-left {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex: 1;
+  }
+  .proj-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    min-width: 0;
+  }
+  .bind-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 1.5px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-2);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .pill.bound {
+    background: var(--done-bg);
+    border-color: var(--done-border);
+    color: var(--done-text);
+  }
+  .pill.running {
+    background: var(--active-bg);
+    border-color: var(--active-border);
+    color: var(--active-text);
+  }
+  .pill.warn {
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+    color: var(--warn-text);
+  }
+  .pill.err {
+    background: var(--err-bg);
+    border-color: var(--err-border);
+    color: var(--err-text);
+  }
+  .pill.muted {
+    background: var(--surface-2);
+    border-color: var(--border);
+    color: var(--muted);
+  }
+
+  .meta-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 10.5px;
+    color: var(--muted);
+    min-width: 0;
+  }
+  .meta-left {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .attr-select {
+    width: 100%;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 6px;
+    border: 1px solid var(--warn-border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 11.5px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+  }
+  .attr-select.normal {
+    border-color: var(--border-strong);
+  }
+
+  /* Context Health Meter */
+  .ctx-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ctx-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-2);
+    min-width: 0;
+  }
+  .ctx-nums {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ctx-nums strong {
+    font-weight: 700;
+    color: var(--text);
+  }
+  .ctx-nums.warn strong { color: var(--warn-accent); }
+  .ctx-nums.critical strong { color: var(--err-accent); }
+
+  .ctx-track {
+    position: relative;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--border);
+    overflow: visible;
+    margin: 2px 0;
+  }
+  .ctx-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--done-accent);
+    transition: width 0.25s ease;
+    max-width: 100%;
+  }
+  .ctx-fill.warn { background: var(--warn-accent); }
+  .ctx-fill.critical { background: var(--err-accent); }
+
+  .ctx-tick {
+    position: absolute;
+    top: -2px;
+    width: 2px;
+    height: 11px;
+    border-radius: 1px;
+    pointer-events: auto;
+  }
+  .ctx-tick.warn { background: var(--warn-accent); }
+  .ctx-tick.crit { background: var(--err-accent); }
+
+  .ctx-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9.5px;
+    color: var(--muted);
+  }
+
+  /* Compact Buttons */
+  .btn {
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-2);
+    padding: 3px 7px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.12s, border-color 0.12s, filter 0.12s;
+  }
+  .btn:hover {
+    background: var(--surface-2);
+    border-color: var(--active-border);
+  }
+  .btn.amber {
+    background: var(--warn-bg-strong);
+    border-color: var(--warn-border);
+    color: var(--warn-text);
+  }
+  .btn.amber:hover { filter: brightness(0.97); }
+  .btn.danger {
+    background: var(--err-accent);
+    border-color: var(--err-accent);
+    color: #ffffff;
+  }
+  .btn.danger:hover { filter: brightness(1.06); }
+  .btn.primary {
+    background: var(--active-accent);
+    border-color: var(--active-accent);
+    color: #ffffff;
+  }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.ghost {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--muted);
+  }
+  .btn.ghost:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  /* Upstream Alert Banner */
+  .alert-banner {
+    border-radius: 7px;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    border: 1px solid var(--err-border);
+    background: var(--err-bg);
+    color: var(--err-text);
+    word-break: break-word;
+  }
+  .alert-banner.warn {
+    border-color: var(--warn-border);
+    background: var(--warn-bg);
+    color: var(--warn-text);
+  }
+
+  /* 3. Main Scrollable Body */
+  .main-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* 3-Color Status Summary Pills */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .summary-pill {
+    border-radius: 7px;
+    padding: 5px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .summary-pill.done {
+    background: var(--done-bg);
+    border-color: var(--done-border);
+    color: var(--done-text);
+  }
+  .summary-pill.active {
+    background: var(--active-bg);
+    border-color: var(--active-border);
+    color: var(--active-text);
+  }
+  .summary-pill.active.has-alert {
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+    color: var(--warn-text);
+  }
+  .summary-pill.todo {
+    background: var(--todo-bg);
+    border-color: var(--todo-border);
+    color: var(--todo-text);
+  }
+
+  .sec-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+
+  /* Vertical Arrow Step Flowchart */
+  .vflow {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vstep {
+    border-radius: 8px;
+    padding: 8px 9px;
+    border: 1.25px solid var(--todo-border);
+    background: var(--todo-bg);
+    transition: border-color 0.15s;
+  }
+  .vstep.st-done {
+    background: var(--done-bg);
+    border-color: var(--done-border);
+  }
+  .vstep.st-running {
+    background: var(--active-bg);
+    border-color: var(--active-accent);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+  }
+  .vstep.st-waiting_approval {
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+  }
+  .vstep.st-blocked,
+  .vstep.st-failed {
+    background: var(--err-bg);
+    border-color: var(--err-border);
+  }
+  .vstep.st-pending {
+    background: var(--todo-bg);
+    border-style: dashed;
+    border-color: var(--todo-border);
+  }
+  .vstep.st-skipped {
+    background: var(--todo-bg);
+    border-color: var(--border);
+    opacity: 0.72;
+  }
+
+  .vstep-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+  }
+  .step-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-icon.done { background: var(--done-bg-strong); color: var(--done-text); }
+  .step-icon.waiting_approval { background: var(--warn-bg-strong); color: var(--warn-text); }
+  .step-icon.blocked,
+  .step-icon.failed { background: var(--err-bg-strong); color: var(--err-text); }
+  .step-icon.skipped { background: var(--surface-2); color: var(--muted); }
+  .step-icon.pending { background: var(--surface-2); color: var(--todo-muted); }
+
+  .vstep-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .vstep-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+  }
+  .vstep-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.35;
+    word-break: break-word;
+    flex: 1;
+    min-width: 0;
+  }
+  .vstep.st-pending .vstep-title { color: var(--todo-text); }
+
+  .step-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .step-badge.done { background: var(--done-bg-strong); color: var(--done-text); }
+  .step-badge.running { background: var(--active-bg-strong); color: var(--active-text); }
+  .step-badge.waiting_approval { background: var(--warn-bg-strong); color: var(--warn-text); }
+  .step-badge.blocked,
+  .step-badge.failed { background: var(--err-bg-strong); color: var(--err-text); }
+  .step-badge.skipped,
+  .step-badge.pending { background: var(--surface-2); color: var(--muted); }
+
+  .vstep-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    font-size: 10.5px;
+    color: var(--muted);
+  }
+  .role-tag {
+    font-size: 9.5px;
+    font-weight: 600;
+    padding: 0.5px 5px;
+    border-radius: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+  }
+  .art-tag {
+    max-width: 165px;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 0.5px 5px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    color: var(--text-2);
+  }
+
+  .vstep-detail {
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .children-toggle {
+    align-self: flex-start;
+    margin-top: 2px;
+    border: none;
+    background: transparent;
+    padding: 1px 2px;
+    font-size: 10.5px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .children-toggle:hover { color: var(--text); }
+
+  .vstep-children {
+    margin-top: 4px;
+    padding-left: 8px;
+    border-left: 2px solid var(--border-strong);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .child-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 10.5px;
+    color: var(--text-2);
+    min-width: 0;
+  }
+  .child-left {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .varrow {
+    height: 16px;
+    display: flex;
+    align-items: center;
+    padding-left: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Concurrent Subagents */
+  .sub-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sub-card {
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    border-radius: 8px;
+    padding: 7px 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sub-card.warn { border-color: var(--warn-border); }
+  .sub-card.critical { border-color: var(--err-border); }
+  .sub-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+  }
+  .sub-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex: 1;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .sub-tok {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .sub-tok.warn { color: var(--warn-accent); }
+  .sub-tok.critical { color: var(--err-accent); }
+  .sub-step {
+    font-size: 10.5px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-width: 0;
+  }
+  .sub-bar {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .sub-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--active-accent);
+    transition: width 0.25s ease;
+  }
+  .sub-fill.warn { background: var(--warn-accent); }
+  .sub-fill.critical { background: var(--err-accent); }
+
+  /* Empty State */
+  .empty-state {
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+    background: var(--bg-subtle);
+    padding: 20px 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+  }
+  .empty-mark {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--active-bg-strong);
+    color: var(--active-text);
+    font-weight: 800;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .empty-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .empty-desc {
+    font-size: 11.5px;
+    line-height: 1.5;
+    max-width: 280px;
+  }
+  .alt-sessions {
+    width: 100%;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: left;
+  }
+  .alt-btn {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .alt-btn:hover {
+    border-color: var(--active-border);
+    background: var(--active-bg);
+  }
+
+  /* 4. Expandable Approval Tray (above sticky footer) */
+  .approval-tray {
+    flex-shrink: 0;
+    max-height: 44vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-top: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-tray);
+    padding: 9px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .approval-tray.hidden { display: none; }
+
+  .tray-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .approval-card {
+    border: 1px solid var(--warn-border);
+    background: var(--warn-bg);
+    border-radius: 8px;
+    padding: 7px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .approval-card.conflict {
+    border-color: var(--err-border);
+    background: var(--err-bg);
+  }
+  .approval-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .approval-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text);
+    word-break: break-word;
+    flex: 1;
+    min-width: 0;
+  }
+  .approval-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .cmd-preview {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 6px;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .approval-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .tray-note {
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--muted);
+    padding-top: 2px;
+  }
+
+  /* 5. Sticky Footer Bar */
+  .footer {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 7px 10px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .gate-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .gate-pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2.5px 7px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-subtle);
+    color: var(--text-2);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .gate-pill.green {
+    background: var(--done-bg);
+    border-color: var(--done-border);
+    color: var(--done-text);
+  }
+  .gate-pill.amber {
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
+    color: var(--warn-text);
+  }
+  .gate-pill.red {
+    background: var(--err-bg);
+    border-color: var(--err-border);
+    color: var(--err-text);
+  }
+
+  .gate-btn {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2.5px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-subtle);
+    color: var(--text-2);
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .gate-btn:hover { background: var(--surface-2); }
+  .gate-btn.amber {
+    background: var(--warn-bg-strong);
+    border-color: var(--warn-border);
+    color: var(--warn-text);
+  }
+  .gate-btn.active {
+    box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25);
+  }
+  .footer-tick {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 46px;
+    transform: translateX(-50%) translateY(6px);
+    z-index: 90;
+    background: #111827;
+    color: #f9fafb;
+    padding: 6px 11px;
+    border-radius: 7px;
+    font-size: 11.5px;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s, transform 0.18s;
+    max-width: calc(100vw - 24px);
+    text-align: center;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <select id="sessionSelect" class="sess-select" aria-label="选择跟踪会话">
+        <option value="auto">自动跟随（当前对话）</option>
+      </select>
+      <span id="syncDot" class="sync-dot busy" title="初始化中…"></span>
+      <button id="refreshBtn" class="icon-btn" type="button" title="立即刷新" aria-label="刷新">↻</button>
+      <button id="themeBtn" class="icon-btn" type="button" title="切换主题（自动/浅色/深色）" aria-label="切换主题">◐</button>
+    </header>
+
+    <section id="headerStrip" class="header-strip hidden"></section>
+
+    <main id="mainBody" class="main-scroll">
+      <div class="empty-state">
+        <div class="empty-mark">研</div>
+        <div class="empty-title">正在连接小研进度引擎…</div>
+        <div class="empty-desc">等待当前对话的实时步骤与上下文数据。</div>
+      </div>
+    </main>
+
+    <section id="approvalTray" class="approval-tray hidden" aria-label="待审批命令列表"></section>
+
+    <footer id="footerBar" class="footer">
+      <div class="gate-group">
+        <span class="gate-pill">图 未检</span>
+        <span class="gate-pill">文 未检</span>
+        <button class="gate-btn" type="button" data-action="toggle-approvals">待审批 0</button>
+      </div>
+      <span class="footer-tick" id="footerTick">—</span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const ROLE_LABELS = {
+    main: '主控',
+    coordinator: '主控',
+    executor: '执行',
+    'r-executor': 'R执行',
+    validator: '验证',
+    'r-validator': 'R验证',
+    publisher: '发布',
+    'evidence-publisher': '发布',
+    explorer: '探索',
+    verifier: '核验',
+    subagent: '子代理',
+  };
+
+  const SESSION_STATUS_META = {
+    running: { label: '运行中', cls: 'running' },
+    blocked: { label: '门禁阻断', cls: 'err' },
+    stalled: { label: '上游卡顿', cls: 'err' },
+    idle: { label: '空闲', cls: 'muted' },
+  };
+
+  const state = {
+    data: null,
+    selectedSessionMode: 'auto', // 'auto' | <session_id>
+    expandedStepIds: new Set(),
+    showAttributionPicker: false,
+    showApprovalTray: false,
+    themeMode: 'auto', // 'auto' | 'light' | 'dark'
+    hostTheme: null,
+    pollTimer: null,
+    pollInFlight: false,
+    tick: 0,
+    lastSyncOk: false,
+    lastError: null,
+    lastSelectSig: '',
+  };
+
+  let nextRpcId = 1;
+  const pendingRpc = new Map();
+  const copyRegistry = new Map();
+  let copySeq = 0;
+
+  const dom = {
+    sessionSelect: document.getElementById('sessionSelect'),
+    syncDot: document.getElementById('syncDot'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    themeBtn: document.getElementById('themeBtn'),
+    headerStrip: document.getElementById('headerStrip'),
+    mainBody: document.getElementById('mainBody'),
+    approvalTray: document.getElementById('approvalTray'),
+    footerBar: document.getElementById('footerBar'),
+    toast: document.getElementById('toast'),
+  };
+
+  /* ==========================================================================
+     Utilities & Formatting
+     ========================================================================== */
+
+  function esc(v) {
+    if (v === null || v === undefined) return '';
+    return String(v).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[c]));
+  }
+
+  function truncate(str, maxLen = 36) {
+    if (!str) return '';
+    const s = String(str);
+    return s.length > maxLen ? `${s.slice(0, Math.max(1, maxLen - 1))}…` : s;
+  }
+
+  function fmtTokens(n) {
+    const num = Number(n);
+    if (!Number.isFinite(num) || num <= 0) return '0';
+    if (num >= 1000000) return `${(num / 1000000).toFixed(2)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(num >= 100000 ? 0 : 1)}k`;
+    return String(Math.round(num));
+  }
+
+  function fmtMs(ms) {
+    if (ms === null || ms === undefined) return '';
+    const n = Number(ms);
+    if (!Number.isFinite(n) || n < 0) return '';
+    if (n < 1000) return `${Math.round(n)}ms`;
+    const s = n / 1000;
+    if (s < 60) return `${s.toFixed(1)}s`;
+    const m = Math.floor(s / 60);
+    const rem = Math.round(s % 60);
+    if (m < 60) return rem ? `${m}m${rem}s` : `${m}m`;
+    const h = Math.floor(m / 60);
+    return `${h}h${m % 60}m`;
+  }
+
+  function fmtRelativeTime(iso) {
+    if (!iso) return '—';
+    const ts = typeof iso === 'number'
+      ? (iso < 1e12 ? iso * 1000 : iso)
+      : Date.parse(iso);
+    if (!Number.isFinite(ts)) return String(iso).slice(0, 16);
+    const diffSec = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+    if (diffSec < 10) return '刚刚';
+    if (diffSec < 60) return `${diffSec}秒前`;
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}分钟前`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}小时前`;
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 30) return `${diffDay}天前`;
+    const d = new Date(ts);
+    const pad = (x) => String(x).padStart(2, '0');
+    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function roleLabel(role) {
+    if (!role) return '';
+    const key = String(role).toLowerCase();
+    return ROLE_LABELS[key] || String(role);
+  }
+
+  function registerCopy(text) {
+    const key = `cp_${++copySeq}`;
+    copyRegistry.set(key, String(text || ''));
+    return key;
+  }
+
+  function toast(msg) {
+    dom.toast.textContent = msg;
+    dom.toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => dom.toast.classList.remove('show'), 2100);
+  }
+
+  async function copyText(text) {
+    if (!text) return false;
+    const str = String(text);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(str);
+        toast('已复制到剪贴板');
+        return true;
+      }
+    } catch (_) {
+      // Fallback below
+    }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = str;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      toast(ok ? '已复制到剪贴板' : '复制失败，请手动复制');
+      return ok;
+    } catch (_) {
+      toast('复制失败，请手动复制');
+      return false;
+    }
+  }
+
+  function formatCommand(item) {
+    if (!item || typeof item !== 'object') return '';
+    if (item.display_cmd && String(item.display_cmd).trim()) {
+      return String(item.display_cmd).trim();
+    }
+    if (Array.isArray(item.argv) && item.argv.length > 0) {
+      return item.argv.map((arg) => {
+        const s = String(arg);
+        return /[\s"'\\$`!#&;()<>|*?[\]{}]/.test(s)
+          ? `'${s.replace(/'/g, "'\\''")}'`
+          : s;
+      }).join(' ');
+    }
+    if (item.command && String(item.command).trim()) {
+      return String(item.command).trim();
+    }
+    return '';
+  }
+
+  /* ==========================================================================
+     Theme Handling
+     ========================================================================== */
+
+  function applyTheme(mode) {
+    state.themeMode = mode;
+    const root = document.documentElement;
+    if (mode === 'light') {
+      root.setAttribute('data-theme', 'light');
+    } else if (mode === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+    } else if (state.hostTheme === 'light' || state.hostTheme === 'dark') {
+      root.setAttribute('data-theme', state.hostTheme);
+    } else {
+      root.removeAttribute('data-theme');
+    }
+    const icons = { auto: '◐', light: '☀', dark: '☾' };
+    const titles = {
+      auto: '主题：跟随宿主（点击切换浅色）',
+      light: '主题：浅色（点击切换深色）',
+      dark: '主题：深色（点击跟随宿主）',
+    };
+    dom.themeBtn.textContent = icons[mode] || '◐';
+    dom.themeBtn.title = titles[mode] || '切换主题';
+  }
+
+  function cycleTheme() {
+    const order = ['auto', 'light', 'dark'];
+    const next = order[(order.indexOf(state.themeMode) + 1) % order.length];
+    applyTheme(next);
+  }
+
+  /* ==========================================================================
+     Normalizers & Classifiers
+     ========================================================================== */
+
+  function normalizeStepStatus(raw) {
+    const s = String(raw || 'pending').toLowerCase();
+    if (s === 'in_progress' || s === 'running' || s === 'active') return 'running';
+    if (s === 'completed' || s === 'done' || s === 'success') return 'done';
+    if (s === 'waiting_approval' || s === 'waiting') return 'waiting_approval';
+    if (s === 'blocked') return 'blocked';
+    if (s === 'failed' || s === 'error') return 'failed';
+    if (s === 'skipped' || s === 'cancelled') return 'skipped';
+    return 'pending';
+  }
+
+  function stepMeta(normStatus) {
+    if (normStatus === 'done') {
+      return { group: 'done', label: '已完成', arrowColor: 'var(--done-accent)', dashed: false };
+    }
+    if (normStatus === 'running') {
+      return { group: 'active', alert: false, label: '进行中', arrowColor: 'var(--active-accent)', dashed: false };
+    }
+    if (normStatus === 'waiting_approval') {
+      return { group: 'active', alert: true, label: '待审批', arrowColor: 'var(--warn-accent)', dashed: false };
+    }
+    if (normStatus === 'blocked') {
+      return { group: 'active', alert: true, label: '阻断', arrowColor: 'var(--err-accent)', dashed: false };
+    }
+    if (normStatus === 'failed') {
+      return { group: 'active', alert: true, label: '失败', arrowColor: 'var(--err-accent)', dashed: false };
+    }
+    if (normStatus === 'skipped') {
+      return { group: 'todo', label: '已跳过', arrowColor: 'var(--todo-muted)', dashed: true };
+    }
+    return { group: 'todo', label: '未完成', arrowColor: 'var(--todo-muted)', dashed: true };
+  }
+
+  function stepIconHtml(normStatus, small = false) {
+    if (normStatus === 'running') {
+      return `<span class="spinner ${small ? 'spinner-xs' : ''}" aria-label="进行中"></span>`;
+    }
+    const sym = normStatus === 'done' ? '✓'
+      : normStatus === 'waiting_approval' ? '⏸'
+      : (normStatus === 'blocked' || normStatus === 'failed') ? '✕'
+      : normStatus === 'skipped' ? '–'
+      : '○';
+    const style = small ? ' style="width:14px;height:14px;font-size:9px;margin-top:0;"' : '';
+    return `<span class="step-icon ${normStatus}"${style}>${sym}</span>`;
+  }
+
+  function arrowDownSvg(color, dashed) {
+    return `<svg width="14" height="16" viewBox="0 0 14 16" fill="none" aria-hidden="true">
+      <line x1="7" y1="1" x2="7" y2="11.5" stroke="${color}" stroke-width="1.8" ${dashed ? 'stroke-dasharray="2.5 2"' : ''} stroke-linecap="round"/>
+      <path d="M3.5 9.5L7 13.5L10.5 9.5" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  }
+
+  function normalizeGateInfo(raw) {
+    if (raw === null || raw === undefined || raw === '') {
+      return { status: 'unknown', label: '未检', tone: 'neutral', detail: '' };
+    }
+    if (typeof raw === 'string') {
+      const s = raw.toLowerCase();
+      if (['pass', 'passed', 'ok', 'clean', 'verified', 'ready', 'submission_ready', 'exempt'].includes(s)) {
+        return { status: 'pass', label: '通过', tone: 'green', detail: raw };
+      }
+      if (['fail', 'failed', 'blocked', 'error', 'invalid', 'changes_required', 'stale'].includes(s)) {
+        return { status: 'fail', label: '阻断', tone: 'red', detail: raw };
+      }
+      if (['warn', 'warning', 'pending', 'partial', 'waiting', 'ready_with_exceptions'].includes(s)) {
+        return { status: 'warn', label: '需关注', tone: 'amber', detail: raw };
+      }
+      return { status: 'unknown', label: '未检', tone: 'neutral', detail: raw };
+    }
+    if (typeof raw === 'object') {
+      const statusStr = String(raw.status || raw.gate_status || raw.state || '').toLowerCase();
+      const failCount = Number(raw.fail ?? raw.fail_count ?? raw.failed ?? 0);
+      const passCount = Number(raw.pass ?? raw.pass_count ?? raw.passed ?? 0);
+      const sessionBlocks = Number(raw.session_blocks ?? 0);
+      const cbBlocks = Number(raw.circuit_breaker_blocks ?? 0);
+      const blocked = Boolean(raw.blocked || raw.hard_blocked || sessionBlocks > 0 || cbBlocks > 0 || statusStr === 'blocked' || statusStr === 'fail' || statusStr === 'failed');
+
+      if (blocked) {
+        const blkCnt = sessionBlocks + cbBlocks + failCount;
+        return {
+          status: 'fail',
+          label: blkCnt > 0 ? `阻断 ${blkCnt}` : '阻断',
+          tone: 'red',
+          detail: raw.message || raw.summary || `阻断次数=${blkCnt}`,
+        };
+      }
+      if (failCount > 0) {
+        return {
+          status: 'fail',
+          label: `失败 ${failCount}`,
+          tone: 'red',
+          detail: raw.message || raw.summary || `失败 ${failCount} 项`,
+        };
+      }
+      if (statusStr === 'pass' || statusStr === 'passed' || statusStr === 'ok') {
+        return {
+          status: 'pass',
+          label: passCount > 0 ? `通过 ${passCount}` : '正常',
+          tone: 'green',
+          detail: raw.message || raw.summary || (passCount > 0 ? `PASS ${passCount}` : '正常'),
+        };
+      }
+      if (statusStr) {
+        const base = normalizeGateInfo(statusStr);
+        base.detail = raw.message || raw.summary || base.detail;
+        return base;
+      }
+      if (passCount > 0) {
+        return { status: 'pass', label: `通过 ${passCount}`, tone: 'green', detail: `PASS ${passCount}` };
+      }
+    }
+    return { status: 'unknown', label: '未检', tone: 'neutral', detail: '' };
+  }
+
+  function getContextHealth(ctx) {
+    if (!ctx || typeof ctx !== 'object') {
+      return { used: 0, window: 258000, pct: 0, softWarn: 180000, handoffTarget: 220000, level: 'ok', compacted: 0, handoffCmd: '' };
+    }
+    const used = Number(ctx.used_tokens || 0);
+    const win = Number(ctx.window_tokens || 258000) || 258000;
+    const softWarn = Number(ctx.soft_warn_tokens || 180000) || 180000;
+    const handoffTarget = Number(ctx.handoff_target_tokens || 220000) || 220000;
+    const rawPct = ctx.pct !== undefined && ctx.pct !== null
+      ? Number(ctx.pct)
+      : (used / win) * 100;
+    const pct = Math.min(100, Math.max(0, Math.round(Number.isFinite(rawPct) ? rawPct : 0)));
+
+    let level = String(ctx.level || 'ok').toLowerCase();
+    if (used >= handoffTarget) level = 'critical';
+    else if (used >= softWarn && level === 'ok') level = 'warn';
+
+    return {
+      used,
+      window: win,
+      pct,
+      softWarn,
+      handoffTarget,
+      level,
+      compacted: Number(ctx.compacted_count || 0),
+      handoffCmd: ctx.handoff_cmd ? String(ctx.handoff_cmd) : '',
+    };
+  }
+
+  function getUpstreamAlert(upstream) {
+    if (!upstream || typeof upstream !== 'object') return null;
+    const stalled = Boolean(upstream.stalled_over_10m);
+    const streak = Number(upstream.streak_504_413 || 0);
+    const retries429 = Number(upstream.retries_429 || 0);
+    const lvl = String(upstream.alert_level || '').toLowerCase();
+
+    if (stalled || streak >= 2 || lvl === 'critical' || lvl === 'error') {
+      const msg = upstream.alert_message || (
+        stalled
+          ? '上游请求超过 10 分钟无响应，建议查 Magpie 网关日志并新开精简线程'
+          : `上游连续 ${streak} 次返回 504/413，建议查网关日志并避免继续膨胀上下文`
+      );
+      return { level: 'critical', message: msg };
+    }
+    if (retries429 > 0 || lvl === 'warn' || lvl === 'warning') {
+      const msg = upstream.alert_message || `上游触发限流重试（429 × ${retries429}），当前响应可能偏慢`;
+      return { level: 'warn', message: msg };
+    }
+    return null;
+  }
+
+  /* ==========================================================================
+     Data Accessors & Auto Session Binding
+     ========================================================================== */
+
+  function getThreadContext() {
+    const tc = state.data && state.data.thread_context;
+    return tc && typeof tc === 'object' ? tc : {};
+  }
+
+  function getSessions() {
+    const list = state.data && state.data.micro && state.data.micro.sessions;
+    return Array.isArray(list) ? list : [];
+  }
+
+  function getProjectsCatalog() {
+    const list = state.data && state.data.macro && state.data.macro.projects;
+    if (!Array.isArray(list)) return [];
+    return list.filter((p) => p && p.id && p.category !== 'system');
+  }
+
+  function getApprovalCommands() {
+    const tc = getThreadContext();
+    return Array.isArray(tc.approval_commands) ? tc.approval_commands : [];
+  }
+
+  function resolveCurrentSession() {
+    const sessions = getSessions();
+    if (sessions.length === 0) return null;
+
+    if (state.selectedSessionMode !== 'auto') {
+      const manual = sessions.find((s) => s.session_id === state.selectedSessionMode);
+      if (manual) return manual;
+    }
+
+    const tc = getThreadContext();
+    if (tc.preferred_session_id) {
+      const pref = sessions.find((s) => s.session_id === tc.preferred_session_id);
+      if (pref) return pref;
+    }
+
+    const activeId = state.data && state.data.micro && state.data.micro.active_session_id;
+    if (activeId) {
+      const act = sessions.find((s) => s.session_id === activeId);
+      if (act) return act;
+    }
+
+    return sessions[0];
+  }
+
+  /* ==========================================================================
+     SEP-1865 JSON-RPC postMessage Bridge
+     ========================================================================== */
+
+  function rpcRequest(method, params) {
+    return new Promise((resolve, reject) => {
+      const id = nextRpcId++;
+      const timer = setTimeout(() => {
+        pendingRpc.delete(id);
+        reject(new Error(`timeout(${method})`));
+      }, 15000);
+      pendingRpc.set(id, { resolve, reject, timer });
+      window.parent.postMessage({ jsonrpc: '2.0', id, method, params }, '*');
+    });
+  }
+
+  function rpcNotify(method, params) {
+    window.parent.postMessage({ jsonrpc: '2.0', method, params }, '*');
+  }
+
+  function extractPayload(res) {
+    if (!res) return null;
+    if (res.structuredContent && typeof res.structuredContent === 'object') {
+      return res.structuredContent;
+    }
+    if (Array.isArray(res.content)) {
+      for (const item of res.content) {
+        if (item && item.type === 'text' && item.text) {
+          try {
+            return JSON.parse(item.text);
+          } catch (_) {}
+        }
+      }
+    }
+    return null;
+  }
+
+  function callServerTool(name, args = {}) {
+    return rpcRequest('tools/call', { name, arguments: args }).then((res) => {
+      const payload = extractPayload(res);
+      if (res && res.isError) {
+        throw new Error((payload && payload.error) || 'tool call error');
+      }
+      return payload;
+    });
+  }
+
+  /* ==========================================================================
+     Rendering
+     ========================================================================== */
+
+  function renderSyncIndicator() {
+    if (state.lastError) {
+      dom.syncDot.className = 'sync-dot err';
+      dom.syncDot.title = `同步异常：${state.lastError}`;
+    } else if (state.lastSyncOk) {
+      dom.syncDot.className = 'sync-dot ok';
+      dom.syncDot.title = `实时已同步 · #${state.tick} · ${fmtRelativeTime(state.data && state.data.generated_at)}`;
+    } else {
+      dom.syncDot.className = 'sync-dot busy';
+      dom.syncDot.title = '正在连接…';
+    }
+  }
+
+  function renderSessionSelect() {
+    const sessions = getSessions();
+    const tc = getThreadContext();
+    const matchingSet = new Set(Array.isArray(tc.matching_session_ids) ? tc.matching_session_ids : []);
+
+    const matched = [];
+    const others = [];
+    for (const s of sessions) {
+      if (matchingSet.has(s.session_id)) matched.push(s);
+      else others.push(s);
+    }
+
+    const sig = JSON.stringify({
+      mode: state.selectedSessionMode,
+      m: matched.map((s) => [s.session_id, s.status, s.project_name || s.title]),
+      o: others.map((s) => [s.session_id, s.status, s.project_name || s.title]),
+    });
+
+    // Avoid rebuilding native <select> while user has it focused
+    if (sig === state.lastSelectSig || document.activeElement === dom.sessionSelect) {
+      return;
+    }
+    state.lastSelectSig = sig;
+
+    const formatOption = (s) => {
+      const dot = s.status === 'running' ? '●' : (s.status === 'blocked' || s.status === 'stalled') ? '!' : '○';
+      const name = truncate(s.project_name || s.title || s.session_id.slice(0, 8), 24);
+      const selected = state.selectedSessionMode === s.session_id ? 'selected' : '';
+      return `<option value="${esc(s.session_id)}" ${selected}>${dot} ${esc(name)}</option>`;
+    };
+
+    const parts = [
+      `<option value="auto" ${state.selectedSessionMode === 'auto' ? 'selected' : ''}>自动跟随（当前对话）</option>`,
+    ];
+    if (matched.length > 0) {
+      parts.push(`<optgroup label="当前课题会话">${matched.map(formatOption).join('')}</optgroup>`);
+    }
+    if (others.length > 0) {
+      parts.push(`<optgroup label="其他会话">${others.map(formatOption).join('')}</optgroup>`);
+    }
+
+    dom.sessionSelect.innerHTML = parts.join('');
+    dom.sessionSelect.value = state.selectedSessionMode;
+  }
+
+  function renderHeaderStrip(session) {
+    // Avoid disrupting active attribution <select> during periodic refresh
+    if (document.activeElement && document.activeElement.id === 'attrSelect') {
+      return;
+    }
+
+    const tc = getThreadContext();
+    if (!session) {
+      if (tc.matched_project_name) {
+        dom.headerStrip.classList.remove('hidden');
+        dom.headerStrip.innerHTML = `
+          <div class="bind-row">
+            <div class="bind-left">
+              <span class="proj-title truncate" title="${esc(tc.matched_project_name)}">${esc(tc.matched_project_name)}</span>
+            </div>
+            <div class="bind-right">
+              <span class="pill bound">当前对话已绑定</span>
+            </div>
+          </div>
+        `;
+      } else {
+        dom.headerStrip.classList.add('hidden');
+        dom.headerStrip.innerHTML = '';
+      }
+      return;
+    }
+
+    dom.headerStrip.classList.remove('hidden');
+
+    const isUnattributed = !session.project_id || session.attribution_confidence === 'unattributed';
+    const matchReason = tc.match_reason || 'none';
+    const stMeta = SESSION_STATUS_META[session.status] || SESSION_STATUS_META.idle;
+
+    let bindBadgeHtml = '';
+    if (state.selectedSessionMode !== 'auto') {
+      bindBadgeHtml = `<span class="pill running" title="当前为手动选择会话">手动固定</span>`;
+    } else if (isUnattributed && matchReason !== 'cwd_exact' && matchReason !== 'project_match') {
+      bindBadgeHtml = `<span class="pill warn" title="未自动识别所属课题，可在下方手动关联">未归属课题</span>`;
+    } else if (matchReason === 'cwd_exact' || matchReason === 'project_match') {
+      bindBadgeHtml = `<span class="pill bound" title="已按当前对话目录/课题自动绑定">当前对话已绑定</span>`;
+    } else if (matchReason === 'fallback_global') {
+      bindBadgeHtml = `<span class="pill muted" title="当前目录无直接匹配会话，已展示全局最新会话">全局最新会话</span>`;
+    } else if (isUnattributed) {
+      bindBadgeHtml = `<span class="pill warn">未归属课题</span>`;
+    }
+
+    const displayName = session.project_name || (isUnattributed ? (session.title || '未归属课题') : session.project_id);
+    const projects = getProjectsCatalog();
+    const showPicker = isUnattributed || state.showAttributionPicker;
+
+    let attrPickerHtml = '';
+    if (showPicker) {
+      const opts = [
+        `<option value="">${isUnattributed ? '⚠ 未归属课题 — 选择要关联的课题…' : '清除手动归属（恢复自动识别）'}</option>`,
+        ...projects.map((p) => (
+          `<option value="${esc(p.id)}" ${p.id === session.project_id ? 'selected' : ''}>${esc(p.name || p.id)}</option>`
+        )),
+      ].join('');
+      attrPickerHtml = `
+        <select id="attrSelect" class="attr-select ${isUnattributed ? '' : 'normal'}" aria-label="设置会话所属课题">
+          ${opts}
+        </select>
+      `;
+    }
+
+    const ctx = getContextHealth(session.context_health);
+    const warnTickPct = Math.min(97, Math.max(5, Math.round((ctx.softWarn / ctx.window) * 100)));
+    const critTickPct = Math.min(99, Math.max(warnTickPct + 1, Math.round((ctx.handoffTarget / ctx.window) * 100)));
+
+    let handoffBtnHtml = '';
+    if (ctx.handoffCmd) {
+      const cpKey = registerCopy(ctx.handoffCmd);
+      const btnCls = ctx.level === 'critical' || ctx.used >= ctx.handoffTarget
+        ? 'danger'
+        : (ctx.level === 'warn' || ctx.used >= ctx.softWarn ? 'amber' : 'ghost');
+      handoffBtnHtml = `<button class="btn ${btnCls}" type="button" data-copy-key="${cpKey}" title="复制上下文交接命令">复制交接命令</button>`;
+    }
+
+    const upAlert = getUpstreamAlert(session.upstream);
+    const upstreamHtml = upAlert
+      ? `<div class="alert-banner ${upAlert.level === 'warn' ? 'warn' : ''}">
+           <span aria-hidden="true">${upAlert.level === 'critical' ? '⚠' : '◔'}</span>
+           <span>${esc(upAlert.message)}</span>
+         </div>`
+      : '';
+
+    const metaParts = [];
+    if (session.model) metaParts.push(truncate(session.model, 20));
+    else if (session.originator) metaParts.push(session.originator);
+    if (ctx.compacted > 0) metaParts.push(`已压缩 ${ctx.compacted} 次`);
+
+    dom.headerStrip.innerHTML = `
+      <div class="bind-row">
+        <div class="bind-left">
+          <span class="proj-title truncate" title="${esc(displayName)}">${esc(displayName)}</span>
+          <span class="pill ${stMeta.cls}">${stMeta.label}</span>
+        </div>
+        <div class="bind-right">
+          ${bindBadgeHtml}
+          <button class="icon-btn sm" type="button" data-action="toggle-attr" title="手动指定/修改会话所属课题" aria-label="修改课题归属">✎</button>
+        </div>
+      </div>
+
+      ${attrPickerHtml}
+
+      <div class="meta-line">
+        <div class="meta-left truncate">
+          <span class="mono truncate">${esc(metaParts.join(' · ') || `会话 ${String(session.session_id || '').slice(0, 8)}`)}</span>
+        </div>
+        <span style="flex-shrink:0;">更新 ${esc(fmtRelativeTime(session.updated_at))}</span>
+      </div>
+
+      <div class="ctx-wrap">
+        <div class="ctx-head">
+          <div class="ctx-nums ${ctx.level !== 'ok' ? ctx.level : ''}" title="上下文使用量 ${fmtTokens(ctx.used)} / ${fmtTokens(ctx.window)} (${ctx.pct}%)">
+            <span>上下文</span>
+            <strong class="mono">${fmtTokens(ctx.used)}</strong>
+            <span class="mono">/ ${fmtTokens(ctx.window)} (${ctx.pct}%)</span>
+          </div>
+          ${handoffBtnHtml}
+        </div>
+        <div class="ctx-track" title="180k 橙标软提醒 · 220k 红标建议交接">
+          <div class="ctx-fill ${ctx.level !== 'ok' ? ctx.level : ''}" style="width:${ctx.pct}%"></div>
+          <div class="ctx-tick warn" style="left:${warnTickPct}%" title="180k 软提醒阈值"></div>
+          <div class="ctx-tick crit" style="left:${critTickPct}%" title="220k 建议交接阈值"></div>
+        </div>
+        <div class="ctx-scale">
+          <span>0</span>
+          <span>橙 180k · 红 220k</span>
+          <span>${fmtTokens(ctx.window)}</span>
+        </div>
+      </div>
+
+      ${upstreamHtml}
+    `;
+  }
+
+  function renderStepCard(step, idx) {
+    const stepId = String(step.id || `step-${idx}`);
+    const norm = normalizeStepStatus(step.status);
+    const meta = stepMeta(norm);
+    const roleText = roleLabel(step.role);
+    const elapsed = step.elapsed_ms != null ? fmtMs(step.elapsed_ms) : '';
+    const children = Array.isArray(step.children) ? step.children : [];
+    const isOpen = state.expandedStepIds.has(stepId);
+
+    const childrenHtml = children.length > 0
+      ? `
+        <button class="children-toggle" type="button" data-toggle-step="${esc(stepId)}">
+          <span>${isOpen ? '▾' : '▸'}</span>
+          <span>${children.length} 项子操作</span>
+        </button>
+        ${isOpen ? `
+          <div class="vstep-children">
+            ${children.map((ch) => {
+              const cNorm = normalizeStepStatus(ch.status);
+              const cElapsed = ch.elapsed_ms != null ? fmtMs(ch.elapsed_ms) : '';
+              const cTitle = ch.title || ch.kind || '子操作';
+              const cTip = [cTitle, ch.detail, ch.artifact_ref].filter(Boolean).join(' · ');
+              return `
+                <div class="child-row">
+                  <div class="child-left">
+                    ${stepIconHtml(cNorm, true)}
+                    <span class="truncate" title="${esc(cTip)}">${esc(cTitle)}${ch.detail ? ` · ${esc(truncate(ch.detail, 40))}` : ''}</span>
+                  </div>
+                  ${cElapsed ? `<span class="mono" style="font-size:9.5px;color:var(--muted);flex-shrink:0;">${esc(cElapsed)}</span>` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+      `
+      : '';
+
+    const metaBits = [];
+    if (roleText) metaBits.push(`<span class="role-tag">${esc(roleText)}</span>`);
+    if (step.kind) metaBits.push(`<span class="mono">${esc(step.kind)}</span>`);
+    if (elapsed) metaBits.push(`<span class="mono">${esc(elapsed)}</span>`);
+    if (step.artifact_ref) {
+      metaBits.push(`<span class="art-tag truncate" title="${esc(step.artifact_ref)}">${esc(step.artifact_ref)}</span>`);
+    }
+
+    return `
+      <div class="vstep st-${norm}">
+        <div class="vstep-top">
+          ${stepIconHtml(norm)}
+          <div class="vstep-main">
+            <div class="vstep-head">
+              <div class="vstep-title">${esc(step.title || '未命名步骤')}</div>
+              <span class="step-badge ${norm}">${meta.label}</span>
+            </div>
+            ${metaBits.length ? `<div class="vstep-meta">${metaBits.join('')}</div>` : ''}
+            ${step.detail ? `<div class="vstep-detail" title="${esc(step.detail)}">${esc(truncate(step.detail, 140))}</div>` : ''}
+            ${childrenHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderSubagentsSection(subagents) {
+    if (!Array.isArray(subagents) || subagents.length === 0) return '';
+    const budget = 120000;
+    const cards = subagents.map((sa) => {
+      const used = Number(sa.used_tokens || 0);
+      const pct = Math.min(100, Math.round((used / budget) * 100));
+      const lvl = String(sa.level || '').toLowerCase();
+      const tone = (used >= 120000 || lvl === 'critical')
+        ? 'critical'
+        : ((used >= 96000 || lvl === 'warn') ? 'warn' : '');
+      const norm = normalizeStepStatus(sa.status);
+      const name = sa.nickname || (sa.thread_id ? String(sa.thread_id).slice(0, 8) : '子代理');
+      const rText = roleLabel(sa.role);
+      const elapsed = sa.elapsed_ms != null ? fmtMs(sa.elapsed_ms) : '';
+
+      return `
+        <div class="sub-card ${tone}">
+          <div class="sub-top">
+            <div class="sub-name-wrap">
+              ${stepIconHtml(norm, true)}
+              <span class="truncate" title="${esc(name)}">${esc(name)}</span>
+              ${rText ? `<span class="role-tag">${esc(rText)}</span>` : ''}
+            </div>
+            <span class="sub-tok ${tone}" title="子代理预算上限 120k（警告 ≥96k，超限 ≥120k）">${fmtTokens(used)} / 120k</span>
+          </div>
+          ${(sa.current_step || elapsed) ? `
+            <div class="sub-step">
+              <span class="truncate" title="${esc(sa.current_step || '')}">${esc(sa.current_step || '等待中')}</span>
+              ${elapsed ? `<span class="mono" style="flex-shrink:0;">${esc(elapsed)}</span>` : ''}
+            </div>
+          ` : ''}
+          <div class="sub-bar" title="${pct}% (${fmtTokens(used)} / 120k)">
+            <div class="sub-fill ${tone}" style="width:${pct}%"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="sec-bar" style="margin-top:4px;">
+        <span>并发子代理（${subagents.length}）</span>
+        <span>预算上限 120k</span>
+      </div>
+      <div class="sub-list">${cards}</div>
+    `;
+  }
+
+  function renderMainBody(session) {
+    const prevScroll = dom.mainBody.scrollTop;
+    const sessions = getSessions();
+    const tc = getThreadContext();
+
+    if (!session) {
+      const otherButtons = sessions.slice(0, 5).map((s) => {
+        const label = s.project_name || s.title || s.session_id.slice(0, 8);
+        const stMeta = SESSION_STATUS_META[s.status] || SESSION_STATUS_META.idle;
+        return `
+          <button class="alt-btn" type="button" data-select-session="${esc(s.session_id)}">
+            <span class="truncate">${esc(label)}</span>
+            <span class="pill ${stMeta.cls}">${stMeta.label}</span>
+          </button>
+        `;
+      }).join('');
+
+      dom.mainBody.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-mark">研</div>
+          <div class="empty-title">${tc.matched_project_name ? `等待「${esc(tc.matched_project_name)}」运行步骤` : '当前对话暂无活跃会话'}</div>
+          <div class="empty-desc">
+            正在等待当前线程的下一次工具调用或计划更新；每 2.5 秒自动刷新。
+          </div>
+          ${sessions.length > 0 ? `
+            <div class="alt-sessions">
+              <div class="sec-bar"><span>切换到其他会话</span><span>${sessions.length}</span></div>
+              ${otherButtons}
+            </div>
+          ` : ''}
+        </div>
+      `;
+      return;
+    }
+
+    const steps = Array.isArray(session.steps) ? session.steps : [];
+    const normStatuses = steps.map((s) => normalizeStepStatus(s.status));
+    let cntDone = 0;
+    let cntActive = 0;
+    let cntTodo = 0;
+    let hasAlertStep = false;
+
+    normStatuses.forEach((st) => {
+      const m = stepMeta(st);
+      if (m.group === 'done') cntDone++;
+      else if (m.group === 'active') {
+        cntActive++;
+        if (m.alert) hasAlertStep = true;
+      } else {
+        cntTodo++;
+      }
+    });
+
+    const totalSteps = Number(session.steps_total ?? steps.length);
+    const doneSteps = Number(session.steps_done ?? cntDone);
+    const planLabel = session.plan_source === 'update_plan' ? '计划驱动' : '动作观测';
+    const activePillLabel = hasAlertStep ? `⏸ 待处理 ${cntActive}` : `⟳ 进行中 ${cntActive}`;
+
+    const flowHtml = steps.length > 0
+      ? `<div class="vflow">
+          ${steps.map((s, idx) => {
+            const m = stepMeta(normStatuses[idx]);
+            const arrow = idx < steps.length - 1
+              ? `<div class="varrow">${arrowDownSvg(m.arrowColor, m.dashed)}</div>`
+              : '';
+            return renderStepCard(s, idx) + arrow;
+          }).join('')}
+        </div>`
+      : `
+        <div class="empty-state" style="padding:16px 12px;">
+          <div class="empty-title" style="font-size:12px;">暂无结构化步骤</div>
+          <div class="empty-desc">等待当前会话的下一轮工具调用或任务计划…</div>
+          ${sessions.length > 1 ? `<button class="btn" type="button" data-action="focus-session-select">切换查看其他会话 (${sessions.length})</button>` : ''}
+        </div>
+      `;
+
+    dom.mainBody.innerHTML = `
+      <div class="summary-grid" aria-label="步骤状态汇总">
+        <div class="summary-pill done">✓ 已完成 ${cntDone}</div>
+        <div class="summary-pill active ${hasAlertStep ? 'has-alert' : ''}">${activePillLabel}</div>
+        <div class="summary-pill todo">○ 未完成 ${cntTodo}</div>
+      </div>
+
+      <div class="sec-bar">
+        <span>执行流程图（${doneSteps}/${totalSteps}）</span>
+        <span class="pill muted">${planLabel}</span>
+      </div>
+
+      ${flowHtml}
+      ${renderSubagentsSection(session.subagents)}
+    `;
+
+    dom.mainBody.scrollTop = prevScroll;
+  }
+
+  function renderApprovalTray() {
+    if (!state.showApprovalTray) {
+      dom.approvalTray.classList.add('hidden');
+      dom.approvalTray.innerHTML = '';
+      return;
+    }
+
+    const items = getApprovalCommands();
+    dom.approvalTray.classList.remove('hidden');
+
+    const cardsHtml = items.length > 0
+      ? items.map((item) => {
+          const conflict = Boolean(item.governance_conflict);
+          const cmdStr = formatCommand(item);
+          const cpKey = cmdStr ? registerCopy(cmdStr) : '';
+          const title = item.title || item.target_label || item.id || '待审批项';
+          const ver = item.version ? `v${String(item.version).replace(/^v/i, '')}` : '';
+
+          return `
+            <div class="approval-card ${conflict ? 'conflict' : ''}">
+              <div class="approval-title-row">
+                <div class="approval-title">${esc(title)}</div>
+                ${conflict ? '<span class="pill err">⚠ 治理冲突</span>' : ''}
+              </div>
+              <div class="approval-meta">
+                <span>${esc(item.project_name || '工作流全局')}</span>
+                ${ver ? `<span class="mono">${esc(ver)}</span>` : ''}
+                ${item.sha12 ? `<span class="mono">#${esc(item.sha12)}</span>` : ''}
+              </div>
+              ${cmdStr ? `<div class="cmd-preview" title="${esc(cmdStr)}">${esc(cmdStr)}</div>` : ''}
+              <div class="approval-actions">
+                ${cmdStr
+                  ? `<button class="btn ${conflict ? 'amber' : 'primary'}" type="button" data-copy-key="${cpKey}">复制命令</button>`
+                  : `<span style="font-size:10px;color:var(--muted);">无可复制命令</span>`}
+              </div>
+            </div>
+          `;
+        }).join('')
+      : `<div style="font-size:11.5px;color:var(--done-text);background:var(--done-bg);border:1px solid var(--done-border);border-radius:7px;padding:8px;text-align:center;font-weight:600;">
+           ✓ 当前无待签署的审批项
+         </div>`;
+
+    dom.approvalTray.innerHTML = `
+      <div class="tray-head">
+        <span>待人工审批（${items.length}）</span>
+        <button class="icon-btn sm" type="button" data-action="toggle-approvals" aria-label="关闭审批抽屉">✕</button>
+      </div>
+      ${cardsHtml}
+      <div class="tray-note">沙箱只读 · 可复制命令到终端，或点右上角菜单栏「小研进度」一键弹终端签署</div>
+    `;
+  }
+
+  function renderFooter(session) {
+    const figInfo = normalizeGateInfo(session && session.gates && session.gates.figure);
+    const proseInfo = normalizeGateInfo(session && session.gates && session.gates.prose);
+    const approvalCmds = getApprovalCommands();
+    const gatePending = Number(session && session.gates && session.gates.approvals_pending || 0);
+    const approvalCount = Math.max(approvalCmds.length, gatePending);
+
+    dom.footerBar.innerHTML = `
+      <div class="gate-group">
+        <span class="gate-pill ${figInfo.tone !== 'neutral' ? figInfo.tone : ''}" title="出图质检门禁：${esc(figInfo.detail || figInfo.label)}">
+          图 ${esc(figInfo.label)}
+        </span>
+        <span class="gate-pill ${proseInfo.tone !== 'neutral' ? proseInfo.tone : ''}" title="写作去AI门禁：${esc(proseInfo.detail || proseInfo.label)}">
+          文 ${esc(proseInfo.label)}
+        </span>
+        <button
+          class="gate-btn ${approvalCount > 0 ? 'amber' : ''} ${state.showApprovalTray ? 'active' : ''}"
+          type="button"
+          data-action="toggle-approvals"
+          title="展开/收起待人工审批命令列表"
+        >
+          待审批 ${approvalCount}
+        </button>
+      </div>
+      <span class="footer-tick" title="实时快照计数">${state.tick > 0 ? `#${state.tick}` : '—'}</span>
+    `;
+  }
+
+  function renderAll() {
+    // Clear copy registry per render cycle to avoid unbounded growth
+    copyRegistry.clear();
+    copySeq = 0;
+
+    renderSyncIndicator();
+    renderSessionSelect();
+    const session = resolveCurrentSession();
+    renderHeaderStrip(session);
+    renderMainBody(session);
+    renderApprovalTray();
+    renderFooter(session);
+  }
+
+  /* ==========================================================================
+     Data Sync & Actions
+     ========================================================================== */
+
+  function applyIncomingData(payload) {
+    if (!payload || typeof payload !== 'object') return;
+    if (!payload.micro && !payload.macro) return;
+    state.data = payload;
+    state.tick = payload.tick || (state.tick + 1);
+    state.lastSyncOk = true;
+    state.lastError = null;
+    renderAll();
+  }
+
+  async function refreshNow(forceRefresh = false) {
+    if (state.pollInFlight) return;
+    state.pollInFlight = true;
+    if (forceRefresh) {
+      dom.syncDot.className = 'sync-dot busy';
+    }
+    try {
+      const payload = await callServerTool('get_research_progress', {
+        refresh: Boolean(forceRefresh),
+      });
+      applyIncomingData(payload);
+    } catch (e) {
+      state.lastError = String((e && e.message) || e);
+      renderSyncIndicator();
+    } finally {
+      state.pollInFlight = false;
+    }
+  }
+
+  async function saveSessionAttribution(sessionId, projectId) {
+    try {
+      await callServerTool('update_progress_prefs', {
+        session_project_overrides: { [sessionId]: projectId },
+      });
+      state.showAttributionPicker = false;
+      toast(projectId ? '已更新会话归属课题' : '已清除手动归属');
+      await refreshNow(false);
+    } catch (e) {
+      toast(`保存归属失败：${(e && e.message) || e}`);
+    }
+  }
+
+  /* ==========================================================================
+     Event Listeners
+     ========================================================================== */
+
+  dom.refreshBtn.addEventListener('click', () => {
+    refreshNow(true);
+  });
+
+  dom.themeBtn.addEventListener('click', () => {
+    cycleTheme();
+  });
+
+  dom.sessionSelect.addEventListener('change', (e) => {
+    state.selectedSessionMode = e.target.value || 'auto';
+    state.showAttributionPicker = false;
+    state.lastSelectSig = '';
+    renderAll();
+  });
+
+  document.getElementById('app').addEventListener('click', (e) => {
+    const toggleStep = e.target.closest('[data-toggle-step]');
+    if (toggleStep) {
+      const sid = toggleStep.getAttribute('data-toggle-step');
+      if (sid) {
+        if (state.expandedStepIds.has(sid)) state.expandedStepIds.delete(sid);
+        else state.expandedStepIds.add(sid);
+        renderAll();
+      }
+      return;
+    }
+
+    const copyBtn = e.target.closest('[data-copy-key]');
+    if (copyBtn) {
+      const key = copyBtn.getAttribute('data-copy-key');
+      const cmd = copyRegistry.get(key);
+      if (cmd) copyText(cmd);
+      return;
+    }
+
+    const selSessBtn = e.target.closest('[data-select-session]');
+    if (selSessBtn) {
+      const sid = selSessBtn.getAttribute('data-select-session');
+      if (sid) {
+        state.selectedSessionMode = sid;
+        state.lastSelectSig = '';
+        renderAll();
+      }
+      return;
+    }
+
+    const actEl = e.target.closest('[data-action]');
+    if (!actEl) return;
+    const action = actEl.getAttribute('data-action');
+    if (action === 'toggle-attr') {
+      state.showAttributionPicker = !state.showAttributionPicker;
+      renderAll();
+    } else if (action === 'toggle-approvals') {
+      state.showApprovalTray = !state.showApprovalTray;
+      renderAll();
+    } else if (action === 'focus-session-select') {
+      dom.sessionSelect.focus();
+    }
+  });
+
+  dom.headerStrip.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'attrSelect') {
+      const session = resolveCurrentSession();
+      if (!session) return;
+      saveSessionAttribution(session.session_id, e.target.value || '');
+    }
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !state.pollInFlight && state.lastSyncOk) {
+      refreshNow(false);
+    }
+  });
+
+  window.addEventListener('message', (ev) => {
+    const msg = ev.data;
+    if (!msg || typeof msg !== 'object' || msg.jsonrpc !== '2.0') return;
+
+    if (msg.id !== undefined && pendingRpc.has(msg.id)) {
+      const entry = pendingRpc.get(msg.id);
+      pendingRpc.delete(msg.id);
+      clearTimeout(entry.timer);
+      if (msg.error) {
+        entry.reject(new Error(msg.error.message || JSON.stringify(msg.error)));
+      } else {
+        entry.resolve(msg.result);
+      }
+      return;
+    }
+
+    if (msg.method === 'ui/notifications/tool-result') {
+      const payload = extractPayload(msg.params);
+      if (payload) applyIncomingData(payload);
+    } else if (msg.method === 'ui/notifications/host-context-changed') {
+      const params = msg.params || {};
+      const theme = params.theme || (params.hostContext && params.hostContext.theme);
+      if (theme === 'light' || theme === 'dark') {
+        state.hostTheme = theme;
+        if (state.themeMode === 'auto') {
+          document.documentElement.setAttribute('data-theme', theme);
+        }
+      }
+    }
+  });
+
+  /* ==========================================================================
+     Boot (SEP-1865 Handshake + 2.5s Live Poll)
+     ========================================================================== */
+
+  async function boot() {
+    applyTheme('auto');
+    try {
+      const initRes = await rpcRequest('ui/initialize', {
+        protocolVersion: '2026-01-26',
+        appInfo: { name: 'xiaoyan-live-progress-panel', version: '1.0.0' },
+        appCapabilities: {},
+      });
+      rpcNotify('ui/notifications/initialized', {});
+      const hostTheme = initRes && initRes.hostContext && initRes.hostContext.theme;
+      if (hostTheme === 'light' || hostTheme === 'dark') {
+        state.hostTheme = hostTheme;
+        if (state.themeMode === 'auto') {
+          document.documentElement.setAttribute('data-theme', hostTheme);
+        }
+      }
+      await refreshNow(false);
+      state.pollTimer = setInterval(() => {
+        if (!document.hidden && !state.pollInFlight) {
+          refreshNow(false);
+        }
+      }, 2500);
+    } catch (e) {
+      state.lastError = String((e && e.message) || e);
+      renderSyncIndicator();
+      dom.mainBody.innerHTML = `
+        <div class="alert-banner">
+          <span>⚠</span>
+          <span>MCP Apps Bridge 初始化失败：${esc(state.lastError)}（请在 Codex / ChatGPT 桌面端右侧面板中打开）</span>
+        </div>
+      `;
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

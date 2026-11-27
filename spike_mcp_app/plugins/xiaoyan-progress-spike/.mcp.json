@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "xiaoyan-progress-spike": {
+      "command": "/usr/bin/python3",
+      "args": [
+        "-u",
+        "/Users/abc/Desktop/gpt/分析软件/codex改装/xiaoyan-progress/spike_mcp_app/plugins/xiaoyan-progress-spike/server.py"
+      ],
+      "startup_timeout_sec": 15,
+      "tool_timeout_sec": 30
+    }
+  }
+}

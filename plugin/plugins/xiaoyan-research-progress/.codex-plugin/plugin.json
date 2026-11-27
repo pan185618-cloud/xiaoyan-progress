@@ -1,0 +1,26 @@
+{
+  "name": "xiaoyan-research-progress",
+  "version": "1.0.0",
+  "description": "小研科研工作流全景流程图与实时运行步骤面板（严格只读，零改动课题文件，支持 S0-S7 流程图、实时步骤追踪与合同/门禁总览）。",
+  "author": {
+    "name": "Xiaoyan Research Workflow"
+  },
+  "license": "internal-use",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "科研大盘",
+    "shortDescription": "小研科研总览流程图与实时运行步骤",
+    "longDescription": "在 ChatGPT Work / Codex 侧边栏原生展示所有科研课题的 S0-S7 箭头流程图（已完成/进行中/未完成分色板块）、受控证据链、待审批门禁，以及当前 Codex/Work 会话的实时运行步骤与上下文水位。",
+    "developerName": "Xiaoyan Research Workflow",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "打开科研大盘查看全部课题流程图",
+      "查看当前正在运行的实时步骤进度"
+    ]
+  }
+}

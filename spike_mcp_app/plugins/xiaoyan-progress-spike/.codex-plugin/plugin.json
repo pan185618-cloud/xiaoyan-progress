@@ -1,0 +1,26 @@
+{
+  "name": "xiaoyan-progress-spike",
+  "version": "0.1.0",
+  "description": "100% synthetic MCP App probe for testing enable_mcp_apps, Sidebar App (global), Thread Panel (thread), and postMessage polling in Codex / ChatGPT Work.",
+  "author": {
+    "name": "Xiaoyan Research Workflow (Spike)"
+  },
+  "license": "internal-use",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Xiaoyan Progress Spike",
+    "shortDescription": "Synthetic MCP App probe (Demo-Project-A/B)",
+    "longDescription": "Read-only synthetic probe testing MCP Apps rendering (ui://xiaoyan-spike/app.html), Sidebar App global entrypoint, Thread Panel entrypoint, and 2s MCP bridge polling.",
+    "developerName": "Xiaoyan Spike",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Call spike_open_dashboard to render the synthetic macro dashboard",
+      "Call spike_open_progress to render the synthetic live step progress panel"
+    ]
+  }
+}

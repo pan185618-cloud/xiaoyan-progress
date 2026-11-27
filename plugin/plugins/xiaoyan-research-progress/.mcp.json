@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "xiaoyan-research-progress": {
+      "command": "/Users/abc/Desktop/gpt/分析软件/codex改装/xiaoyan-progress/.venv/bin/python",
+      "args": [
+        "-u",
+        "/Users/abc/Desktop/gpt/分析软件/codex改装/xiaoyan-progress/plugin/plugins/xiaoyan-research-progress/server.py"
+      ],
+      "startup_timeout_sec": 20,
+      "tool_timeout_sec": 30
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "xiaoyan-progress",
+  "interface": {
+    "displayName": "小研科研大盘"
+  },
+  "plugins": [
+    {
+      "name": "xiaoyan-research-progress",
+      "source": {
+        "source": "local",
+        "path": "./plugins/xiaoyan-research-progress"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

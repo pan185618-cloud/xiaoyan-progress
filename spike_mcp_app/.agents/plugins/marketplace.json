@@ -1,0 +1,20 @@
+{
+  "name": "xiaoyan-spike",
+  "interface": {
+    "displayName": "Xiaoyan MCP App Spike (Synthetic)"
+  },
+  "plugins": [
+    {
+      "name": "xiaoyan-progress-spike",
+      "source": {
+        "source": "local",
+        "path": "./plugins/xiaoyan-progress-spike"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
